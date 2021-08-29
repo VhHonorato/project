@@ -1,0 +1,141 @@
+import React, { useState } from 'react'
+import './style.css'
+import {Card, Typography, TextField, Button, Backdrop, CircularProgress, Snackbar} from '@material-ui/core';
+import {Alert} from '@material-ui/lab';
+import { makeStyles } from '@material-ui/core/styles';
+import {useForm} from 'react-hook-form';
+import {useHistory} from 'react-router-dom'
+
+const useStyles = makeStyles((theme) => ({
+    card: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        borderRadius:16,
+        boxShadow: "0px 8px 9px -5px rgba(0, 0, 0, 0.2), 0px 15px 22px 2px rgba(0, 0, 0, 0.14), 0px 6px 28px 5px rgba(0, 0, 0, 0.12)", 
+        padding:"80px 73px 89px 74px",
+        "& h2":{
+            marginBottom: 88,
+        } 
+    },
+    row:{
+        display: "flex",
+        flexDirection: "column",
+        marginBottom: 40,
+
+    },
+    label:{ 
+        marginBottom: 48
+    },
+    button:{ 
+        marginLeft: "auto",
+        marginRight: "auto",
+        "& hover":{
+             backgroundColor: "250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms"
+        }
+    },
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+      }
+}));
+
+function Cadastro() {
+
+    const classes = useStyles();
+    const history = useHistory();
+    const {handleSubmit, register, formState: { errors }, setError} = useForm();
+    const [carregando, setCarregando] = useState(false);
+    const [erroCarregamento, setErroCarregamento] = useState('');
+
+    async function cadastro(dados){
+        if (dados.senha !== dados.senhaConfirmacao || !dados.nome_loja || !dados.email || !dados.nome){
+            setError('senha', {type: "validate"}, {shouldFocus: true});
+            setError('senhaConfirmacao', {type: "validate"}, {shouldFocus: true});
+            setError('nome_loja', {type: "validate"}, {shouldFocus: true});
+            setError('email', {type: "validate"}, {shouldFocus: true});
+            setError('nome', {type: "validate"}, {shouldFocus: true});
+            return;
+        }
+
+        setErroCarregamento('');
+        setCarregando(true);
+
+        const resposta = await fetch('https://desafio-m03.herokuapp.com/usuarios',{
+            method: 'POST',
+            body: JSON.stringify(dados),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        setCarregando(false);
+
+        const dataApi = await resposta.json();
+        if(!resposta.ok){
+            let erro = new Error(dataApi);
+            erro.status = 400;
+            setErroCarregamento(dataApi);
+            return;
+            
+        }
+        
+        history.push('/login');
+    }
+
+    return(
+       <form className="container" onSubmit={handleSubmit(cadastro)}>
+           <Card className={classes.card}>
+               <Typography variant = "h4" component="h2">Criar uma conta</Typography>
+               <div className={classes.row}>
+                   <TextField 
+                   className= {classes.label} 
+                   label="Seu nome" 
+                   {...register('nome', {required: true})}
+                   error = {!!errors.nome}
+                   />
+                   <TextField
+                    className= {classes.label} 
+                    label="Nome da loja"
+                    {...register('nome_loja',{required: true})}
+                    error = {!!errors.loja}
+                    />
+                   <TextField 
+                   className= {classes.label} 
+                   label="Email"
+                   {...register('email',{required: true})}
+                   error = {!!errors.email}
+                   />
+                   <TextField 
+                   className= {classes.label} 
+                   label="Senha" 
+                   type="password"
+                   {...register('senha',{required: true})}
+                   error = {!!errors.senha}
+                   />
+                   <TextField 
+                   className= {classes.label} 
+                   label="Repita a senha" 
+                   type="password"
+                   {...register('senhaConfirmacao',{required: true})}
+                   error = {!!errors.senhaConfirmacao}
+                   />
+               </div>
+                <Button type="submit" className= {classes.button} variant="contained" color="primary">
+                    Criar conta
+                </Button>
+                {carregando && <Backdrop className={classes.backdrop} open={carregando} >
+                    <CircularProgress color="inherit" />
+                </Backdrop>}
+                {erroCarregamento && <Snackbar open={erroCarregamento} autoHideDuration={1000}  >
+                    <Alert  severity="error">
+                        {erroCarregamento}
+                    </Alert>
+                </Snackbar>}
+            </Card>
+       </form>
+        
+    );
+
+}
+
+export default Cadastro;
