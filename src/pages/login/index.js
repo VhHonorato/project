@@ -87,7 +87,7 @@ function Login() {
     return(
        <form className="container" onSubmit={handleSubmit(login)}>
            <Card className={classes.card}>
-               <Typography variant = "h4" component="h2">Login</Typography>
+               <Typography variant = "h4" component="h2">Acessar a Conta</Typography>
                <div className={classes.row}>
                    <TextField 
                    className= {classes.label} label="E-mail"
